@@ -1,0 +1,48 @@
+/* Site color variables based on requested palette */
+:root{
+  /* Deep near-black (text/background accents) */
+  --color-1: #050412;
+  /* Light cream background */
+  --color-2: #FCFCFE;
+  /* Warm brown */
+  --color-3: #9A695A;
+  /* Deep brown accent */
+  --color-4: #4D3E39;
+  /* Bright yellow accent */
+  --color-5: #FBDB0E;
+
+  /* Derived utility variables */
+  --bg: var(--color-2);
+  --text: var(--color-1);
+  /* Base accent is warm brown, strong accent is bright yellow */
+  --accent: var(--color-3);
+  --accent-strong: var(--color-5);
+  --accent-soft: var(--color-4);
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global base styles to blend the palette */
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+  }
+
+  /* Make primary link/button focus outlines use the stronger brand color */
+  .ring-brand {
+    --tw-ring-color: rgba(251,219,14,0.6); /* accent-strong (#FBDB0E) */
+  }
+}
+
+/* Strong header gradient that blends warm brown -> deep */
+.bg-brand-gradient {
+  background: linear-gradient(90deg, rgba(154,105,90,0.95), rgba(5,4,18,0.95));
+}
+
+/* Subtle header gradient helper */
+.header-gradient {
+  background: linear-gradient(90deg, rgba(77,62,57,0.98), rgba(5,4,18,0.95));
+} 
