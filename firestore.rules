@@ -1,0 +1,96 @@
+/**
+ * FIRESTORE SECURITY RULES
+ * 
+ * These rules ensure:
+ * - Users can only read/write their own data
+ * - Admins can read/write all shipments and payments
+ * - Public can track shipments by tracking number
+ * - Locations are publicly readable
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth.uid != null &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper function to check user ownership
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Shipments collection
+    match /shipments/{shipmentId} {
+      // Users can read their own shipments
+      allow read: if request.auth != null && 
+                     (isOwner(resource.data.userId) || isAdmin());
+      // Admins can create, update, delete shipments
+      allow create, update, delete: if isAdmin();
+      // Public can read by tracking number (for tracking page)
+      allow read: if request.query.where.exists(q => 
+                     q.field == 'trackingNumber' && 
+                     q.op == '==');
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read, update: if isOwner(resource.data.userId);
+      // Admins can create notifications
+      allow create: if isAdmin();
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Quotes collection
+    match /quotes/{quoteId} {
+      // Users can create and read their own quotes
+      allow create: if request.auth != null;
+      allow read, update: if isOwner(resource.data.userId);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Tracking events collection
+    match /tracking_events/{eventId} {
+      // Admins can create tracking events
+      allow create: if isAdmin();
+      // Public and users can read tracking events for public shipments
+      allow read: if true;
+    }
+
+    // Saved addresses collection
+    match /saved_addresses/{addressId} {
+      // Users can create, read, update, delete their own addresses
+      allow create: if request.auth != null;
+      allow read, update, delete: if isOwner(resource.data.userId);
+    }
+
+    // Payments collection
+    match /payments/{paymentId} {
+      // Users can read their own payments
+      allow read: if request.auth != null && 
+                     (isOwner(resource.data.userId) || isAdmin());
+      // Admins can create and update payments
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Locations collection (public read-only)
+    match /locations/{locationId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

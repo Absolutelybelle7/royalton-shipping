@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Calculator, Package, TrendingUp } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function QuotePage() {
@@ -8,13 +9,13 @@ export function QuotePage() {
   const [loading, setLoading] = useState(false);
   const [quote, setQuote] = useState<number | null>(null);
   const [formData, setFormData] = useState({
-    service_type: 'domestic',
-    origin_city: '',
-    origin_country: '',
-    destination_city: '',
-    destination_country: '',
+    serviceType: 'domestic',
+    originCity: '',
+    originCountry: '',
+    destinationCity: '',
+    destinationCountry: '',
     weight: '',
-    declared_value: '',
+    declaredValue: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
@@ -42,7 +43,7 @@ export function QuotePage() {
 
     try {
       const weight = parseFloat(formData.weight);
-      const calculatedQuote = calculateQuote(weight, formData.service_type);
+      const calculatedQuote = calculateQuote(weight, formData.serviceType);
       setQuote(calculatedQuote);
 
       const validUntil = new Date();
@@ -50,21 +51,20 @@ export function QuotePage() {
 
       const userId = (user as any)?.uid ?? (user as any)?.id ?? null;
 
-      await supabase.from('quotes').insert([
-        {
-          user_id: userId,
-          service_type: formData.service_type,
-          origin_city: formData.origin_city,
-          origin_country: formData.origin_country,
-          destination_city: formData.destination_city,
-          destination_country: formData.destination_country,
-          weight: weight,
-          declared_value: formData.declared_value ? parseFloat(formData.declared_value) : null,
-          quoted_price: calculatedQuote,
-          status: 'quoted',
-          valid_until: validUntil.toISOString(),
-        },
-      ]);
+      await addDoc(collection(db, 'quotes'), {
+        userId,
+        serviceType: formData.serviceType,
+        originCity: formData.originCity,
+        originCountry: formData.originCountry,
+        destinationCity: formData.destinationCity,
+        destinationCountry: formData.destinationCountry,
+        weight: weight,
+        declaredValue: formData.declaredValue ? parseFloat(formData.declaredValue) : null,
+        quotedPrice: calculatedQuote,
+        status: 'quoted',
+        validUntil: validUntil.toISOString(),
+        createdAt: new Date().toISOString(),
+      });
     } catch (err: unknown) {
       alert('Error calculating quote: ' + String((err as Error)?.message || err));
     } finally {
@@ -88,8 +88,8 @@ export function QuotePage() {
                   Service Type
                 </label>
                 <select
-                  name="service_type"
-                  value={formData.service_type}
+                  name="serviceType"
+                  value={formData.serviceType}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -108,8 +108,8 @@ export function QuotePage() {
                   </label>
                   <input
                     type="text"
-                    name="origin_city"
-                    value={formData.origin_city}
+                    name="originCity"
+                    value={formData.originCity}
                     onChange={handleChange}
                     required
                     placeholder="e.g., New York"
@@ -123,8 +123,8 @@ export function QuotePage() {
                   </label>
                   <input
                     type="text"
-                    name="origin_country"
-                    value={formData.origin_country}
+                    name="originCountry"
+                    value={formData.originCountry}
                     onChange={handleChange}
                     required
                     placeholder="e.g., USA"
@@ -138,8 +138,8 @@ export function QuotePage() {
                   </label>
                   <input
                     type="text"
-                    name="destination_city"
-                    value={formData.destination_city}
+                    name="destinationCity"
+                    value={formData.destinationCity}
                     onChange={handleChange}
                     required
                     placeholder="e.g., London"
@@ -153,8 +153,8 @@ export function QuotePage() {
                   </label>
                   <input
                     type="text"
-                    name="destination_country"
-                    value={formData.destination_country}
+                    name="destinationCountry"
+                    value={formData.destinationCountry}
                     onChange={handleChange}
                     required
                     placeholder="e.g., UK"
@@ -187,8 +187,8 @@ export function QuotePage() {
                   </label>
                   <input
                     type="number"
-                    name="declared_value"
-                    value={formData.declared_value}
+                    name="declaredValue"
+                    value={formData.declaredValue}
                     onChange={handleChange}
                     step="0.01"
                     min="0"

@@ -1,60 +1,60 @@
 export interface Shipment {
   id: string;
-  user_id: string | null;
-  tracking_number: string;
+  userId: string | null;
+  trackingNumber: string;
   status: 'pending' | 'picked_up' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'cancelled';
-  service_type: 'domestic' | 'international' | 'express' | 'freight';
-  origin_address: string;
-  origin_city: string;
-  origin_country: string;
-  destination_address: string;
-  destination_city: string;
-  destination_country: string;
+  serviceType: 'domestic' | 'international' | 'express' | 'freight';
+  originAddress: string;
+  originCity: string;
+  originCountry: string;
+  destinationAddress: string;
+  destinationCity: string;
+  destinationCountry: string;
   weight: number | null;
   dimensions: { length: number; width: number; height: number } | null;
-  declared_value: number | null;
-  pickup_date: string | null;
-  estimated_delivery: string | null;
-  actual_delivery: string | null;
-  recipient_name: string;
-  recipient_email: string | null;
-  recipient_phone: string | null;
+  declaredValue: number | null;
+  pickupDate: string | null;
+  estimatedDelivery: string | null;
+  actualDelivery: string | null;
+  recipientName: string;
+  recipientEmail: string | null;
+  recipientPhone: string | null;
   notes: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Quote {
   id: string;
-  user_id: string | null;
-  service_type: string;
-  origin_city: string;
-  origin_country: string;
-  destination_city: string;
-  destination_country: string;
+  userId: string | null;
+  serviceType: string;
+  originCity: string;
+  originCountry: string;
+  destinationCity: string;
+  destinationCountry: string;
   weight: number;
   dimensions: { length: number; width: number; height: number } | null;
-  declared_value: number | null;
-  quoted_price: number | null;
+  declaredValue: number | null;
+  quotedPrice: number | null;
   status: string;
-  valid_until: string | null;
-  created_at: string;
+  validUntil: string | null;
+  createdAt: string;
 }
 
 export interface SavedAddress {
   id: string;
-  user_id: string;
+  userId: string;
   label: string;
-  recipient_name: string;
-  address_line1: string;
-  address_line2: string | null;
+  recipientName: string;
+  addressLine1: string;
+  addressLine2: string | null;
   city: string;
   state: string | null;
-  postal_code: string;
+  postalCode: string;
   country: string;
   phone: string | null;
-  is_default: boolean;
-  created_at: string;
+  isDefault: boolean;
+  createdAt: string;
 }
 
 export interface Location {
@@ -65,30 +65,30 @@ export interface Location {
   city: string;
   state: string | null;
   country: string;
-  postal_code: string | null;
+  postalCode: string | null;
   phone: string | null;
   email: string | null;
   coordinates: { lat: number; lng: number } | null;
   hours: Record<string, string> | null;
   services: string[];
-  is_active: boolean;
-  created_at: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export interface Notification {
   id: string;
-  user_id: string;
-  shipment_id: string | null;
+  userId: string;
+  shipmentId: string | null;
   type: string;
   title: string;
   message: string;
-  is_read: boolean;
-  created_at: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface TrackingEvent {
   id: string;
-  shipment_id: string;
+  shipmentId: string;
   status: string;
   location: string | null;
   description: string;

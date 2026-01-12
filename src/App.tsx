@@ -17,26 +17,12 @@ import { AboutPage } from './pages/AboutPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { ADMIN_PATH } from './config/admin';
-import { AdminLayout } from './components/AdminLayout';
-
-import { useState, useEffect } from 'react';
 
 function App() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname + window.location.search);
-
-  useEffect(() => {
-    const handler = () => setCurrentPath(window.location.pathname + window.location.search);
-    window.addEventListener('popstate', handler);
-    return () => window.removeEventListener('popstate', handler);
-  }, []);
-
-  const isAdminRoute = currentPath.startsWith(ADMIN_PATH);
-
   return (
     <AuthProvider>
       <div className="flex flex-col min-h-screen">
-        {!isAdminRoute && <Header />}
+        <Header />
         <main className="flex-grow">
           <Router>
             <Route path="/" component={<HomePage />} />
@@ -57,10 +43,10 @@ function App() {
             <Route path="/about" component={<AboutPage />} />
             <Route path="/privacy" component={<PrivacyPage />} />
             <Route path="/terms" component={<TermsPage />} />
-            <Route path={ADMIN_PATH} component={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
+            <Route path="/admin" component={<AdminDashboardPage />} />
           </Router>
         </main>
-        {!isAdminRoute && <Footer />}
+        <Footer />
       </div>
     </AuthProvider>
   );

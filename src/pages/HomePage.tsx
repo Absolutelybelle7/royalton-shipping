@@ -3,14 +3,14 @@ import { Search, Package, Truck, Globe, Zap, MapPin, Calculator, Clock, Ship, Ar
 import { Link } from '../components/Router';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
-import shipVid from '../assets/videos/ship.vid.low.3.mp4';
-import shipVid2 from '../assets/videos/shipvid.low.2.mp4';
-
+import shipVid from '../assets/videos/ship_vid.mp4';
+import shipVid2 from '../assets/videos/shipvid2.mp4';
+import shipVid3 from '../assets/videos/shipvid3.mp4';
 
 
 export function HomePage() {
   // Multiple videos for looping
-  const videos = [shipVid, shipVid2];
+  const videos = [shipVid, shipVid2, shipVid3];
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
 

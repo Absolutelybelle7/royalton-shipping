@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Package, Filter } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Shipment } from '../types';
 import { navigate } from '../components/Router';
@@ -28,16 +29,20 @@ export function ShipmentsPage() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('userId', user.uid)
-        .eq('userId', user.uid)
-        .order('createdAt', { ascending: false });
+      const shipmentsQuery = query(
+        collection(db, 'shipments'),
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
 
-      if (error) throw error;
-      setShipments(data || []);
-      setFilteredShipments(data || []);
+      const snapshot = await getDocs(shipmentsQuery);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Shipment[];
+
+      setShipments(data);
+      setFilteredShipments(data);
     } catch (err) {
       console.error('Error fetching shipments:', err);
     } finally {
@@ -108,14 +113,14 @@ export function ShipmentsPage() {
               <div
                 key={shipment.id}
                 className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow cursor-pointer"
-                onClick={() => navigate(`/track?number=${shipment.tracking_number}`)}
+                onClick={() => navigate(`/track?number=${shipment.trackingNumber}`)}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 mb-1">
-                      {shipment.tracking_number}
+                      {shipment.trackingNumber}
                     </h3>
-                    <p className="text-gray-600 capitalize">{shipment.service_type} Shipping</p>
+                    <p className="text-gray-600 capitalize">{shipment.serviceType} Shipping</p>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
@@ -129,16 +134,16 @@ export function ShipmentsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                   <div>
                     <p className="text-sm font-semibold text-gray-900 mb-1">Origin</p>
-                    <p className="text-gray-600">{shipment.origin_address}</p>
+                    <p className="text-gray-600">{shipment.originAddress}</p>
                     <p className="text-gray-600">
-                      {shipment.origin_city}, {shipment.origin_country}
+                      {shipment.originCity}, {shipment.originCountry}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-gray-900 mb-1">Destination</p>
-                    <p className="text-gray-600">{shipment.destination_address}</p>
+                    <p className="text-gray-600">{shipment.destinationAddress}</p>
                     <p className="text-gray-600">
-                      {shipment.destination_city}, {shipment.destination_country}
+                      {shipment.destinationCity}, {shipment.destinationCountry}
                     </p>
                   </div>
                 </div>
@@ -147,14 +152,14 @@ export function ShipmentsPage() {
                   <div>
                     <p className="text-xs text-gray-500">Created</p>
                     <p className="text-sm font-medium text-gray-900">
-                      {new Date(shipment.created_at).toLocaleDateString()}
+                      {new Date(shipment.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  {shipment.estimated_delivery && (
+                  {shipment.estimatedDelivery && (
                     <div>
                       <p className="text-xs text-gray-500">Est. Delivery</p>
                       <p className="text-sm font-medium text-gray-900">
-                        {new Date(shipment.estimated_delivery).toLocaleDateString()}
+                        {new Date(shipment.estimatedDelivery).toLocaleDateString()}
                       </p>
                     </div>
                   )}
@@ -166,7 +171,7 @@ export function ShipmentsPage() {
                   )}
                   <div>
                     <p className="text-xs text-gray-500">Recipient</p>
-                    <p className="text-sm font-medium text-gray-900">{shipment.recipient_name}</p>
+                    <p className="text-sm font-medium text-gray-900">{shipment.recipientName}</p>
                   </div>
                 </div>
               </div>

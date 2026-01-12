@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Package, TrendingUp, Clock, CheckCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Shipment, Notification } from '../types';
 import { Link, navigate } from '../components/Router';
@@ -28,22 +29,32 @@ export function DashboardPage() {
       const userId = (user as User).uid;
       if (!userId) return;
 
-      const { data: shipmentsData } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Fetch shipments
+      const shipmentsQuery = query(
+        collection(db, 'shipments'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      const shipmentsSnapshot = await getDocs(shipmentsQuery);
+      const shipmentsData = shipmentsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Shipment[];
 
-      const { data: notificationsData } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Fetch notifications
+      const notificationsQuery = query(
+        collection(db, 'notifications'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      const notificationsSnapshot = await getDocs(notificationsQuery);
+      const notificationsData = notificationsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Notification[];
 
-      setShipments(shipmentsData || []);
-      setNotifications(notificationsData || []);
+      setShipments(shipmentsData.slice(0, 5));
+      setNotifications(notificationsData.slice(0, 5));
     } catch (err) {
       console.error('Error fetching data:', err);
     } finally {
@@ -183,13 +194,13 @@ export function DashboardPage() {
                     <div
                       key={shipment.id}
                       className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => navigate(`/track?number=${shipment.tracking_number}`)}
+                      onClick={() => navigate(`/track?number=${shipment.trackingNumber}`)}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-semibold text-gray-900">{shipment.tracking_number}</p>
+                          <p className="font-semibold text-gray-900">{shipment.trackingNumber}</p>
                           <p className="text-sm text-gray-600">
-                            {shipment.origin_city} → {shipment.destination_city}
+                            {shipment.originCity} → {shipment.destinationCity}
                           </p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(shipment.status)}`}>
@@ -197,7 +208,7 @@ export function DashboardPage() {
                         </span>
                       </div>
                       <div className="text-sm text-gray-500">
-                        Created: {new Date(shipment.created_at).toLocaleDateString()}
+                        Created: {new Date(shipment.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
@@ -255,7 +266,7 @@ export function DashboardPage() {
                     <div
                       key={notification.id}
                       className={`p-3 rounded-md ${
-                        notification.is_read ? 'bg-gray-50' : 'bg-blue-50'
+                        notification.isRead ? 'bg-gray-50' : 'bg-blue-50'
                       }`}
                     >
                       <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
