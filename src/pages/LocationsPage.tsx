@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Phone, Mail, Clock, Search } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { Location } from '../types';
 
 export function LocationsPage() {
@@ -20,15 +21,20 @@ export function LocationsPage() {
 
   const fetchLocations = async () => {
     try {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
+      const locationsQuery = query(
+        collection(db, 'locations'),
+        where('isActive', '==', true),
+        orderBy('name')
+      );
 
-      if (error) throw error;
-      setLocations(data || []);
-      setFilteredLocations(data || []);
+      const snapshot = await getDocs(locationsQuery);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Location[];
+
+      setLocations(data);
+      setFilteredLocations(data);
     } catch (err) {
       console.error('Error fetching locations:', err);
     } finally {

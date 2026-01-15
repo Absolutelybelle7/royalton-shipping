@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, CheckCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { collection, query, where, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Notification } from '../types';
 import { navigate } from '../components/Router';
@@ -24,14 +25,19 @@ export function NotificationsPage() {
 
     try {
       const userId = (user as User).uid;
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+      const notificationsQuery = query(
+        collection(db, 'notifications'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
 
-      if (error) throw error;
-      setNotifications(data || []);
+      const snapshot = await getDocs(notificationsQuery);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Notification[];
+
+      setNotifications(data);
     } catch (err) {
       console.error('Error fetching notifications:', err);
     } finally {
@@ -41,8 +47,8 @@ export function NotificationsPage() {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+      await updateDoc(doc(db, 'notifications', id), { isRead: true });
+      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch (err) {
       console.error('Error marking notification as read:', err);
     }
@@ -52,8 +58,13 @@ export function NotificationsPage() {
     if (!user) return;
     try {
       const userId = (user as User).uid;
-      await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId);
-      setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+      const unreadNotifications = notifications.filter(n => !n.isRead);
+      
+      for (const notification of unreadNotifications) {
+        await updateDoc(doc(db, 'notifications', notification.id), { isRead: true });
+      }
+      
+      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     } catch (err) {
       console.error('Error marking all as read:', err);
     }
@@ -75,7 +86,7 @@ export function NotificationsPage() {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Notifications</h1>
             <p className="text-gray-600">Stay updated on your shipments and account</p>
           </div>
-          {notifications.some(n => !n.is_read) && (
+          {notifications.some(n => !n.isRead) && (
             <button
               onClick={markAllAsRead}
               className="flex items-center text-orange-500 hover:text-orange-600 font-medium"
@@ -92,22 +103,22 @@ export function NotificationsPage() {
               <div
                 key={notification.id}
                 className={`bg-white rounded-lg shadow-md p-6 ${
-                  !notification.is_read ? 'border-l-4 border-orange-500' : ''
+                  !notification.isRead ? 'border-l-4 border-orange-500' : ''
                 }`}
-                onClick={() => !notification.is_read && markAsRead(notification.id)}
+                onClick={() => !notification.isRead && markAsRead(notification.id)}
               >
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="text-lg font-semibold text-gray-900">{notification.title}</h3>
                   <span className="text-sm text-gray-500">
-                    {new Date(notification.created_at).toLocaleDateString()}
+                    {new Date(notification.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <p className="text-gray-600 mb-2">{notification.message}</p>
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-medium ${
-                    notification.is_read ? 'text-gray-500' : 'text-orange-500'
+                    notification.isRead ? 'text-gray-500' : 'text-orange-500'
                   }`}>
-                    {notification.is_read ? 'Read' : 'Unread'}
+                    {notification.isRead ? 'Read' : 'Unread'}
                   </span>
                   <span className="text-xs text-gray-500 capitalize">{notification.type}</span>
                 </div>

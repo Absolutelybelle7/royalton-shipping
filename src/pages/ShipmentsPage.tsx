@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Package, Filter } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Package, Filter, MapPin, Truck, Calendar, User } from 'lucide-react';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Shipment } from '../types';
 import { navigate } from '../components/Router';
@@ -28,16 +29,20 @@ export function ShipmentsPage() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('userId', user.uid)
-        .eq('userId', user.uid)
-        .order('createdAt', { ascending: false });
+      const shipmentsQuery = query(
+        collection(db, 'shipments'),
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
 
-      if (error) throw error;
-      setShipments(data || []);
-      setFilteredShipments(data || []);
+      const snapshot = await getDocs(shipmentsQuery);
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Shipment[];
+
+      setShipments(data);
+      setFilteredShipments(data);
     } catch (err) {
       console.error('Error fetching shipments:', err);
     } finally {
@@ -64,6 +69,20 @@ export function ShipmentsPage() {
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-orange-100 text-orange-800';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'delivered':
+        return '✓';
+      case 'in_transit':
+      case 'out_for_delivery':
+        return '⏱';
+      case 'cancelled':
+        return '✕';
+      default:
+        return '⊙';
     }
   };
 
@@ -107,67 +126,110 @@ export function ShipmentsPage() {
             {filteredShipments.map((shipment) => (
               <div
                 key={shipment.id}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow cursor-pointer"
-                onClick={() => navigate(`/track?number=${shipment.tracking_number}`)}
+                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer overflow-hidden"
+                onClick={() => navigate(`/track?number=${shipment.trackingNumber}`)}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">
-                      {shipment.tracking_number}
-                    </h3>
-                    <p className="text-gray-600 capitalize">{shipment.service_type} Shipping</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                      shipment.status
-                    )}`}
-                  >
-                    {shipment.status.replace('_', ' ').toUpperCase()}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Origin</p>
-                    <p className="text-gray-600">{shipment.origin_address}</p>
-                    <p className="text-gray-600">
-                      {shipment.origin_city}, {shipment.origin_country}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-1">Destination</p>
-                    <p className="text-gray-600">{shipment.destination_address}</p>
-                    <p className="text-gray-600">
-                      {shipment.destination_city}, {shipment.destination_country}
-                    </p>
+                {/* Header */}
+                <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-6 border-b border-orange-200">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1 font-mono">
+                        {shipment.trackingNumber}
+                      </h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Truck className="h-4 w-4" />
+                        <span className="capitalize">{shipment.serviceType} Shipping</span>
+                      </div>
+                    </div>
+                    <span
+                      className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(
+                        shipment.status
+                      )}`}
+                    >
+                      {shipment.status.replace('_', ' ').toUpperCase()}
+                    </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
-                  <div>
-                    <p className="text-xs text-gray-500">Created</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {new Date(shipment.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  {shipment.estimated_delivery && (
+                {/* Locations Section */}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <p className="text-xs text-gray-500">Est. Delivery</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="h-5 w-5 text-orange-500" />
+                        <h4 className="font-semibold text-gray-900">Origin</h4>
+                      </div>
+                      <div className="ml-7 space-y-1">
+                        <p className="text-gray-700 font-medium">
+                          {(shipment as any).origin?.address || shipment.originAddress || 'N/A'}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          {((shipment as any).origin?.city || shipment.originCity) && ((shipment as any).origin?.country || shipment.originCountry)
+                            ? `${(shipment as any).origin?.city || shipment.originCity}, ${(shipment as any).origin?.country || shipment.originCountry}`
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin className="h-5 w-5 text-green-500" />
+                        <h4 className="font-semibold text-gray-900">Destination</h4>
+                      </div>
+                      <div className="ml-7 space-y-1">
+                        <p className="text-gray-700 font-medium">
+                          {(shipment as any).destination?.address || shipment.destinationAddress || 'N/A'}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          {((shipment as any).destination?.city || shipment.destinationCity) && ((shipment as any).destination?.country || shipment.destinationCountry)
+                            ? `${(shipment as any).destination?.city || shipment.destinationCity}, ${(shipment as any).destination?.country || shipment.destinationCountry}`
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details Section */}
+                <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="flex flex-col">
+                    <p className="text-xs text-gray-500 font-semibold mb-2">Created</p>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
                       <p className="text-sm font-medium text-gray-900">
-                        {new Date(shipment.estimated_delivery).toLocaleDateString()}
+                        {new Date(shipment.createdAt).toLocaleDateString()}
                       </p>
                     </div>
+                  </div>
+
+                  {shipment.estimatedDelivery && (
+                    <div className="flex flex-col">
+                      <p className="text-xs text-gray-500 font-semibold mb-2">Est. Delivery</p>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-gray-400" />
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(shipment.estimatedDelivery).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
                   )}
+
                   {shipment.weight && (
-                    <div>
-                      <p className="text-xs text-gray-500">Weight</p>
+                    <div className="flex flex-col">
+                      <p className="text-xs text-gray-500 font-semibold mb-2">Weight</p>
                       <p className="text-sm font-medium text-gray-900">{shipment.weight} kg</p>
                     </div>
                   )}
-                  <div>
-                    <p className="text-xs text-gray-500">Recipient</p>
-                    <p className="text-sm font-medium text-gray-900">{shipment.recipient_name}</p>
-                  </div>
+
+                  {shipment.recipientName && (
+                    <div className="flex flex-col">
+                      <p className="text-xs text-gray-500 font-semibold mb-2">Recipient</p>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <p className="text-sm font-medium text-gray-900">{shipment.recipientName}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

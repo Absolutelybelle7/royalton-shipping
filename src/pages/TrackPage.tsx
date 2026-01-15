@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Package, MapPin, Clock, CheckCircle, Truck } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { getDocs, collection, query, where, orderBy } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { Shipment, TrackingEvent } from '../types';
-import { getDocs, collection as fbCollection, query as fbQuery, where as fbWhere } from 'firebase/firestore';
-import { db as fbDb } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
 export function TrackPage() {
@@ -13,7 +12,6 @@ export function TrackPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { addHistoryEntry } = useAuth();
-
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -34,95 +32,80 @@ export function TrackPage() {
     setTrackingEvents([]);
 
     try {
-      const { data: shipmentData, error: shipmentError } = await supabase
-        .from('shipments')
-        .select('*')
-        .eq('tracking_number', searchNumber)
-        .maybeSingle();
+      // Query Firestore for shipment by tracking number
+      const q = query(
+        collection(db, 'shipments'),
+        where('trackingNumber', '==', searchNumber)
+      );
+      const snap = await getDocs(q);
 
-      if (shipmentError) throw shipmentError;
-
-      if (!shipmentData) {
-        // Fallback: try Firestore (some shipments are created in Firestore)
-        try {
-          const q = fbQuery(fbCollection(fbDb, 'shipments'), fbWhere('trackingNumber', '==', searchNumber));
-          const snap = await getDocs(q);
-          if (snap.empty) {
-            setError('Tracking number not found. Please check and try again.');
-            setLoading(false);
-            return;
-          }
-
-          const doc = snap.docs[0];
-          const data = doc.data() as any;
-
-          // Map Firestore fields to our Shipment interface shape
-          const mapped: Shipment = {
-            id: doc.id,
-            user_id: data.userId || null,
-            tracking_number: data.trackingNumber || '',
-            status: data.status || 'pending',
-            service_type: data.serviceType || data.service_type || 'domestic',
-            origin_address: data.origin?.address || data.origin_address || '',
-            origin_city: data.origin?.city || data.origin_city || '',
-            origin_country: data.origin?.country || data.origin_country || '',
-            destination_address: data.destination?.address || data.destination_address || '',
-            destination_city: data.destination?.city || data.destination_city || '',
-            destination_country: data.destination?.country || data.destination_country || '',
-            weight: typeof data.weight === 'number' ? data.weight : null,
-            dimensions: data.dimensions || null,
-            declared_value: data.declaredValue || data.declared_value || null,
-            pickup_date: data.pickupDate || data.pickup_date || null,
-            estimated_delivery: data.estimatedDelivery || data.estimated_delivery || null,
-            actual_delivery: data.actualDelivery || data.actual_delivery || null,
-            recipient_name: data.recipientName || data.recipient_name || '',
-            recipient_email: data.recipientEmail || data.recipient_email || null,
-            recipient_phone: data.recipientPhone || data.recipient_phone || null,
-            notes: data.notes || null,
-            created_at: data.createdAt || data.created_at || '',
-            updated_at: data.updatedAt || data.updated_at || '',
-          };
-
-          setShipment(mapped);
-
-          // record that the user searched/tracked this number (found in Firestore)
-          try {
-            await addHistoryEntry({ type: 'track', payload: { trackingNumber: searchNumber, found: true } });
-          } catch (e) {
-            // ignore errors
-          }
-
-          setTrackingEvents([]);
-          setLoading(false);
-          return;
-        } catch (fbErr) {
-          console.error('Error querying Firestore for shipment:', fbErr);
-          setError('An error occurred while tracking your package. Please try again.');
-          setLoading(false);
-          return;
-        }
+      if (snap.empty) {
+        setError('Tracking number not found. Please check and try again.');
+        setLoading(false);
+        return;
       }
+
+      const doc = snap.docs[0];
+      const data = doc.data() as any;
+
+      // Construct shipment object
+      const shipmentData: Shipment = {
+        id: doc.id,
+        userId: data.userId || null,
+        trackingNumber: data.trackingNumber || '',
+        status: data.status || 'pending',
+        serviceType: data.serviceType || 'domestic',
+        originAddress: data.origin?.address || data.originAddress || '',
+        originCity: data.origin?.city || data.originCity || '',
+        originCountry: data.origin?.country || data.originCountry || '',
+        destinationAddress: data.destination?.address || data.destinationAddress || '',
+        destinationCity: data.destination?.city || data.destinationCity || '',
+        destinationCountry: data.destination?.country || data.destinationCountry || '',
+        weight: typeof data.weight === 'number' ? data.weight : null,
+        dimensions: data.dimensions || null,
+        declaredValue: data.declaredValue || null,
+        pickupDate: data.pickupDate || null,
+        estimatedDelivery: data.estimatedDelivery || null,
+        actualDelivery: data.actualDelivery || null,
+        recipientName: data.recipientName || '',
+        recipientEmail: data.recipientEmail || null,
+        recipientPhone: data.recipientPhone || null,
+        notes: data.notes || null,
+        createdAt: data.createdAt || '',
+        updatedAt: data.updatedAt || '',
+      };
 
       setShipment(shipmentData);
 
-      // record that the user searched/tracked this number
+      // Record that the user searched/tracked this number
       try {
         await addHistoryEntry({ type: 'track', payload: { trackingNumber: searchNumber, found: true } });
       } catch (e) {
-        // ignore history errors
+        // Ignore history errors
       }
 
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('tracking_events')
-        .select('*')
-        .eq('shipment_id', shipmentData.id)
-        .order('timestamp', { ascending: false });
+      // Fetch tracking events for this shipment
+      const eventsQuery = query(
+        collection(db, 'tracking_events'),
+        where('shipmentId', '==', doc.id),
+        orderBy('timestamp', 'desc')
+      );
+      const eventsSnap = await getDocs(eventsQuery);
+      const eventsData = eventsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as TrackingEvent[];
 
-      if (eventsError) throw eventsError;
-
-      setTrackingEvents(eventsData || []);
+      setTrackingEvents(eventsData);
     } catch (err: unknown) {
-      setError('An error occurred while tracking your package. Please try again.');
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (errorMsg.includes('Missing or insufficient permissions')) {
+        setError('Unable to load tracking information. Please ensure Firebase is not blocked by browser extensions.');
+      } else if (errorMsg.includes('not found')) {
+        setError('Tracking number not found. Please check and try again.');
+      } else {
+        setError('An error occurred while tracking your package. Please try again.');
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -208,7 +191,7 @@ export function TrackPage() {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    Tracking: {shipment.tracking_number}
+                    Tracking: {shipment.trackingNumber}
                   </h2>
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
@@ -227,9 +210,9 @@ export function TrackPage() {
                     <MapPin className="h-5 w-5 mr-2 text-orange-500" />
                     Origin
                   </h3>
-                  <p className="text-gray-600">{shipment.origin_address}</p>
+                  <p className="text-gray-600">{(shipment as any).origin?.address || shipment.originAddress}</p>
                   <p className="text-gray-600">
-                    {shipment.origin_city}, {shipment.origin_country}
+                    {((shipment as any).origin?.city || shipment.originCity)}, {((shipment as any).origin?.country || shipment.originCountry)}
                   </p>
                 </div>
 
@@ -238,9 +221,9 @@ export function TrackPage() {
                     <MapPin className="h-5 w-5 mr-2 text-green-500" />
                     Destination
                   </h3>
-                  <p className="text-gray-600">{shipment.destination_address}</p>
+                  <p className="text-gray-600">{(shipment as any).destination?.address || shipment.destinationAddress}</p>
                   <p className="text-gray-600">
-                    {shipment.destination_city}, {shipment.destination_country}
+                    {((shipment as any).destination?.city || shipment.destinationCity)}, {((shipment as any).destination?.country || shipment.destinationCountry)}
                   </p>
                 </div>
               </div>
@@ -248,13 +231,13 @@ export function TrackPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t">
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Service Type</h3>
-                  <p className="text-gray-600 capitalize">{shipment.service_type}</p>
+                  <p className="text-gray-600 capitalize">{shipment.serviceType}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Estimated Delivery</h3>
                   <p className="text-gray-600">
-                    {shipment.estimated_delivery
-                      ? new Date(shipment.estimated_delivery).toLocaleDateString()
+                    {shipment.estimatedDelivery
+                      ? new Date(shipment.estimatedDelivery).toLocaleDateString()
                       : 'TBD'}
                   </p>
                 </div>
@@ -266,15 +249,15 @@ export function TrackPage() {
                 </div>
               </div>
 
-              {shipment.recipient_name && (
+              {shipment.recipientName && (
                 <div className="mt-6 pt-6 border-t">
                   <h3 className="font-semibold text-gray-900 mb-2">Recipient</h3>
-                  <p className="text-gray-600">{shipment.recipient_name}</p>
-                  {shipment.recipient_email && (
-                    <p className="text-gray-600">{shipment.recipient_email}</p>
+                  <p className="text-gray-600">{shipment.recipientName}</p>
+                  {shipment.recipientEmail && (
+                    <p className="text-gray-600">{shipment.recipientEmail}</p>
                   )}
-                  {shipment.recipient_phone && (
-                    <p className="text-gray-600">{shipment.recipient_phone}</p>
+                  {shipment.recipientPhone && (
+                    <p className="text-gray-600">{shipment.recipientPhone}</p>
                   )}
                 </div>
               )}

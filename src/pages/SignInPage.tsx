@@ -1,16 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Package } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../components/Router';
 
 export function SignInPage() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, userData, isAdmin, loading: authLoading } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect authenticated users to appropriate dashboard
+  // Wait until userData is loaded before redirecting to ensure role is available
+  useEffect(() => {
+    if (user && userData && !authLoading) {
+      const redirectPath = isAdmin ? '/admin' : '/dashboard';
+      navigate(redirectPath);
+    }
+  }, [user, userData, isAdmin, authLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,9 +33,9 @@ export function SignInPage() {
 
       if (error) {
         setError(error.message);
-      } else {
-        navigate('/dashboard');
       }
+      // Navigation will be handled by the useEffect hook above
+      // when the user state is updated from Firebase auth
     } catch (err: unknown) {
       setError(String((err as Error)?.message || err));
     } finally {

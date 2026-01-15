@@ -1,7 +1,6 @@
 import { Menu, X, User, Bell, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { Link, navigate } from './Router';
-import { ADMIN_PATH } from '../config/admin';
 import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/images/logo.png';
 
@@ -60,7 +59,7 @@ export function Header() {
                   </button>
                   <div className="absolute right-0 mt-2 w-48 bg-white text-gray-900 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                     {isAdmin && (
-                      <Link to={ADMIN_PATH} className="block px-4 py-2 hover:bg-gray-100 text-orange-600 font-semibold">
+                      <Link to="/admin" className="block px-4 py-2 hover:bg-gray-100 text-orange-600 font-semibold">
                         <Shield className="inline h-4 w-4 mr-2" />
                         Admin Dashboard
                       </Link>
@@ -147,7 +146,7 @@ export function Header() {
               <>
                 {isAdmin && (
                   <Link
-                    to={ADMIN_PATH}
+                    to="/admin"
                     className="block px-3 py-2 rounded-md hover:bg-gray-700 text-orange-400 font-semibold"
                     onClick={() => setMobileMenuOpen(false)}
                   >

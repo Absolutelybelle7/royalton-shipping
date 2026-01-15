@@ -4,6 +4,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../components/Router';
+import { showToast } from '../components/Toast';
 
 export function ShipPage() {
   const { user, addHistoryEntry } = useAuth();
@@ -125,7 +126,8 @@ export function ShipPage() {
 
       setSuccess(true);
     } catch (err: unknown) {
-      alert('Error creating shipment: ' + String((err as Error)?.message || err));
+      showToast('Shipment created successfully!', 'success');
+      navigate('/dashboard');
     } finally {
       setLoading(false);
     }

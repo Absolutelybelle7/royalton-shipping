@@ -5,7 +5,7 @@ interface RouteProps {
   component: ReactNode;
 }
 
-export function Route(_props: RouteProps): JSX.Element | null {
+export function Route({ path, component }: RouteProps) {
   return null;
 }
 

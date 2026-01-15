@@ -2,6 +2,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { Router, Route } from './components/Router';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Toast } from './components/Toast';
 import { HomePage } from './pages/HomePage';
 import { TrackPage } from './pages/TrackPage';
 import { ShipPage } from './pages/ShipPage';
@@ -17,26 +19,13 @@ import { AboutPage } from './pages/AboutPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { ADMIN_PATH } from './config/admin';
-import { AdminLayout } from './components/AdminLayout';
-
-import { useState, useEffect } from 'react';
 
 function App() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname + window.location.search);
-
-  useEffect(() => {
-    const handler = () => setCurrentPath(window.location.pathname + window.location.search);
-    window.addEventListener('popstate', handler);
-    return () => window.removeEventListener('popstate', handler);
-  }, []);
-
-  const isAdminRoute = currentPath.startsWith(ADMIN_PATH);
-
   return (
     <AuthProvider>
+      <Toast />
       <div className="flex flex-col min-h-screen">
-        {!isAdminRoute && <Header />}
+        <Header />
         <main className="flex-grow">
           <Router>
             <Route path="/" component={<HomePage />} />
@@ -51,16 +40,16 @@ function App() {
             <Route path="/locations" component={<LocationsPage />} />
             <Route path="/support" component={<SupportPage />} />
             <Route path="/signin" component={<SignInPage />} />
-            <Route path="/dashboard" component={<DashboardPage />} />
-            <Route path="/shipments" component={<ShipmentsPage />} />
-            <Route path="/notifications" component={<NotificationsPage />} />
+            <Route path="/dashboard" component={<ProtectedRoute requireAuth={true}><DashboardPage /></ProtectedRoute>} />
+            <Route path="/shipments" component={<ProtectedRoute requireAuth={true}><ShipmentsPage /></ProtectedRoute>} />
+            <Route path="/notifications" component={<ProtectedRoute requireAuth={true}><NotificationsPage /></ProtectedRoute>} />
             <Route path="/about" component={<AboutPage />} />
             <Route path="/privacy" component={<PrivacyPage />} />
             <Route path="/terms" component={<TermsPage />} />
-            <Route path={ADMIN_PATH} component={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
+            <Route path="/admin" component={<ProtectedRoute requireAdmin={true}><AdminDashboardPage /></ProtectedRoute>} />
           </Router>
         </main>
-        {!isAdminRoute && <Footer />}
+        <Footer />
       </div>
     </AuthProvider>
   );

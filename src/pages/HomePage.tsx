@@ -27,8 +27,11 @@ export function HomePage() {
     
     // Load and play the current video
     video.load();
-    video.play().catch((error) => {
-      console.error('Error playing video:', error);
+    video.play().catch((error: Error) => {
+      // Ignore AbortError which occurs when video load is interrupted by a new video load
+      if (error.name !== 'AbortError') {
+        console.error('Error playing video:', error);
+      }
     });
 
     return () => {
