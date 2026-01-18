@@ -11,7 +11,7 @@ export function AboutPage() {
       >
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white max-w-3xl px-4">
-            <h1 className="text-5xl font-bold mb-4">About TrackXpress</h1>
+            <h1 className="text-5xl font-bold mb-4">About Royalton Gold Security and Shipping</h1>
             <p className="text-xl">
               Leading the future of global logistics with reliable, transparent, and innovative shipping solutions
             </p>
@@ -24,7 +24,7 @@ export function AboutPage() {
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Story</h2>
             <p className="text-gray-600 mb-4">
-              Founded in 1998, TrackXpress has grown from a small local courier service to one of the world's most trusted logistics partners. Our journey has been driven by a simple mission: to make shipping simple, reliable, and transparent for everyone.
+              Founded in 1998, Royalton Gold Security and Shipping has grown from a small local courier service to one of the world's most trusted logistics partners. Our journey has been driven by a simple mission: to make shipping simple, reliable, and transparent for everyone.
             </p>
             <p className="text-gray-600 mb-4">
               With over 25 years of experience, we've built a global network that spans 180+ countries, delivering millions of packages every year. Our commitment to innovation and customer service has made us the preferred choice for businesses and individuals worldwide.
@@ -53,14 +53,14 @@ export function AboutPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
               <Globe className="h-8 w-8 text-orange-500" />
             </div>
-            <h3 className="text-2xl font-bold text-orange-500 mb-2">180+</h3>
+            <h3 className="text-2xl font-bold text-orange-500 mb-2">100+</h3>
             <p className="text-gray-600">Countries Served</p>
           </div>
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
               <Users className="h-8 w-8 text-orange-500" />
             </div>
-            <h3 className="text-2xl font-bold text-orange-500 mb-2">5,000+</h3>
+            <h3 className="text-2xl font-bold text-orange-500 mb-2">500+</h3>
             <p className="text-gray-600">Team Members</p>
           </div>
           <div className="text-center">

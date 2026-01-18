@@ -3,6 +3,7 @@ import { Calculator, Package, TrendingUp } from 'lucide-react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { showToast } from '../components/Toast';
 
 export function QuotePage() {
   const { user } = useAuth();

@@ -1,7 +1,10 @@
 import { Truck, Globe, Zap, Package, ArrowRight } from 'lucide-react';
 import { Link } from '../components/Router';
 import { motion } from 'framer-motion';
-
+import Roadtrans from '../assets/images/roadtrans.jpg';
+import seatrans from '../assets/images/seatrans.jpg';
+import airtrans from '../assets/images/airtrans.jpg';
+import FTtrans from '../assets/images/FTtrans.jpg';
 export function ServicesPage() {
   const services = [
     {
@@ -9,7 +12,7 @@ export function ServicesPage() {
       name: 'Road Transport',
       icon: Truck,
       color: 'from-blue-500 to-blue-600',
-      image: 'https://images.pexels.com/photos/3821667/pexels-photo-3821667.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      image: Roadtrans,
       description: 'Fast and reliable shipping within your country with guaranteed delivery times.',
       features: [
         'Same-day and next-day delivery options',
@@ -25,7 +28,7 @@ export function ServicesPage() {
       name: 'Sea Transport',
       icon: Globe,
       color: 'from-green-500 to-green-600',
-      image: 'https://images.pexels.com/photos/4391470/pexels-photo-4391470.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      image: seatrans,
       description: 'Global reach with expert customs clearance and documentation support.',
       features: [
         'Customs documentation assistance',
@@ -41,7 +44,7 @@ export function ServicesPage() {
       name: 'Air Freight',
       icon: Zap,
       color: 'from-red-500 to-red-600',
-      image: 'https://images.pexels.com/photos/76969/cold-front-warm-front-front-weather-76969.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      image: airtrans,
       description: 'Lightning-fast delivery for time-sensitive shipments with priority handling.',
       features: [
         'Same-day delivery available',
@@ -57,7 +60,7 @@ export function ServicesPage() {
       name: 'Freight & Cargo',
       icon: Package,
       color: 'from-orange-500 to-orange-600',
-      image: 'https://images.pexels.com/photos/4467677/pexels-photo-4467677.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      image: FTtrans,
       description: 'Heavy shipments and bulk logistics with specialized handling and equipment.',
       features: [
         'Palletized shipping',

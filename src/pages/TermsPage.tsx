@@ -8,14 +8,15 @@ export function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Agreement to Terms</h2>
             <p className="text-gray-600">
-              By accessing and using TrackXpress services, you agree to be bound by these Terms and Conditions. If you disagree with any part of these terms, you may not access our services.
+              By accessing and using Royalton Gold Security and Shipping services, you agree to be bound by these Terms and Conditions. If you disagree with any part of these terms, you may not access our services.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Services</h2>
             <p className="text-gray-600">
-              TrackXpress provides logistics and shipping services including domestic shipping, international shipping, express delivery, and freight services. All shipments are subject to our shipping policies and applicable laws.
+              Royalton Gold Security and Shipping provides logistics and shipping services including domestic shipping, international shipping, express delivery, and freight services.
+               All shipments are subject to our shipping policies and applicable laws.
             </p>
           </section>
 
@@ -34,35 +35,39 @@ export function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Prohibited Items</h2>
             <p className="text-gray-600">
-              You may not ship hazardous materials, illegal substances, weapons, explosives, or any items prohibited by law. We reserve the right to refuse service for any shipment containing prohibited items.
+              You may not ship hazardous materials, illegal substances, 
+              weapons, explosives, or any items prohibited by law. 
+              We reserve the right to refuse service for any shipment containing prohibited items.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Liability</h2>
             <p className="text-gray-600">
-              Our liability for loss or damage to shipments is limited as specified in our shipping agreement. Additional insurance coverage is available for declared value shipments.
+              Our liability for loss or damage to shipments is limited as specified in our shipping agreement.
+               Additional insurance coverage is available for declared value shipments.
             </p>
           </section>
 
-          <section>
+          {/* <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Payment Terms</h2>
             <p className="text-gray-600">
               Payment is due at the time of service unless otherwise agreed. We accept major credit cards and electronic payments. Late payments may incur additional fees.
             </p>
-          </section>
+          </section> */}
 
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Modifications</h2>
             <p className="text-gray-600">
-              We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting. Your continued use of our services constitutes acceptance of the modified terms.
+              We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting.
+               Your continued use of our services constitutes acceptance of the modified terms.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Contact Information</h2>
             <p className="text-gray-600">
-              For questions about these Terms and Conditions, please contact us at legal@trackxpress.com
+              For questions about these Terms and Conditions, please contact us at legal@royaltongold.com
             </p>
           </section>
 

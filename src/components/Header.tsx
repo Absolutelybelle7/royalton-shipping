@@ -30,7 +30,7 @@ export function Header() {
               Home
             </Link>
             <Link to="/ship" className="hover:text-orange-600 transition-colors">
-              Shipping
+              Ship
             </Link>
             <Link to="/track" className="hover:text-orange-600 transition-colors">
               Tracking
@@ -112,7 +112,7 @@ export function Header() {
               className="block px-3 py-2 rounded-md hover:bg-brand-800"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Shipping
+              Ship
             </Link>
             <Link
               to="/track"

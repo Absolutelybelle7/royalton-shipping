@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <div className="flex items-center space-x-2 mb-4">
               <Package className="h-8 w-8 text-orange-600" />
-              <span className="font-bold text-xl">TrackXpress</span>
+              <span className="font-bold text-xl">Royalton Gold Security and Shipping</span>
             </div>
             <p className="text-gray-400 text-sm">
               Reliable, on-time, and transparent shipping for every voyage.
@@ -87,25 +87,25 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
-            <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-orange-600">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-orange-600">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-orange-600">
-                <Linkedin className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-orange-600">
-                <Instagram className="h-5 w-5" />
-              </a>
-            </div>
+                {/* <div className="flex space-x-4">
+                  <a href="#" className="text-gray-400 hover:text-orange-600">
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-gray-400 hover:text-orange-600">
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-gray-400 hover:text-orange-600">
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                  <a href="#" className="text-gray-400 hover:text-orange-600">
+                    <Instagram className="h-5 w-5" />
+                  </a>
+                </div> */}
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-          <p>&copy; {new Date().getFullYear()} TrackXpress. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Royalton Gold Security and Shipping Company. All rights reserved.</p>
         </div>
       </div>
     </footer>

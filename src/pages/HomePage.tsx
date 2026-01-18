@@ -5,6 +5,12 @@ import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
 import shipVid from '../assets/videos/ship.vid.low.3.mp4';
 import shipVid2 from '../assets/videos/shipvid.low.2.mp4';
+import roadtrans from '../assets/images/roadtrans.jpg';
+import seatrans from '../assets/images/seatrans.jpg';
+import airtrans from '../assets/images/airtrans.jpg';
+import FTtrans from '../assets/images/FTtrans.jpg';
+import storage from '../assets/images/storage.jpg';  
+import aboutImg from '../assets/images/about.jpg';
 
 
 
@@ -191,7 +197,7 @@ export function HomePage() {
               <Link to="/about" className="inline-block bg-orange-500 hover:bg-orange-600 text-brand-900 px-6 py-3 rounded-md font-semibold">Learn More</Link>
             </div>
             <div className="hidden md:block">
-              <img src="https://images.pexels.com/photos/386009/pexels-photo-386009.jpeg?auto=compress&cs=tinysrgb&w=800" alt="About" className="w-full h-44 object-cover rounded-md shadow-sm" />
+              <img src={aboutImg} alt="About" className="w-full h-44 object-cover rounded-md shadow-sm" />
             </div>
           </div>
         </div>
@@ -213,7 +219,7 @@ export function HomePage() {
               <Link to="/services/freight" className="inline-block bg-orange-500 hover:bg-orange-600 text-brand-900 px-6 py-3 rounded-md font-semibold">Explore Storage</Link>
             </div>
             <div>
-              <img src="https://images.pexels.com/photos/1030896/pexels-photo-1030896.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Storage" className="w-full h-44 object-cover rounded-md shadow-sm" />
+              <img src= {storage} alt="Storage" className="w-full h-44 object-cover rounded-md shadow-sm" />
             </div>
           </div>
         </div>
@@ -288,28 +294,28 @@ export function HomePage() {
             {[
               {
                 to: '/services/domestic',
-                image: 'https://images.pexels.com/photos/3821667/pexels-photo-3821667.jpeg?auto=compress&cs=tinysrgb&w=800',
+                image: roadtrans,
                 title: 'Road Transport',
                 desc: 'Fast and reliable shipping within your country',
                 icon: Truck,
               },
               {
                 to: '/services/international',
-                image: 'https://images.pexels.com/photos/4391470/pexels-photo-4391470.jpeg?auto=compress&cs=tinysrgb&w=800',
+                image: seatrans,
                 title: 'Sea Transport',
                 desc: 'Global reach with customs expertise',
                 icon: Ship,
               },
               {
                 to: '/services/express',
-                image: 'https://images.pexels.com/photos/76969/cold-front-warm-front-front-weather-76969.jpeg?auto=compress&cs=tinysrgb&w=800',
+                image: airtrans,
                 title: 'Air Freight',
                 desc: 'Lightning-fast delivery for time-sensitive shipments',
                 icon: Zap,
               },
               {
                 to: '/services/freight',
-                image: 'https://images.pexels.com/photos/4467677/pexels-photo-4467677.jpeg?auto=compress&cs=tinysrgb&w=800',
+                image: FTtrans,
                 title: 'Freight & Cargo',
                 desc: 'Heavy shipments and bulk logistics',
                 icon: Package,

@@ -150,7 +150,7 @@ export function LocationsPage() {
                         {location.state && `, ${location.state}`}
                       </p>
                       <p>{location.country}</p>
-                      {location.postal_code && <p>{location.postal_code}</p>}
+                      {location.postalCode && <p>{location.postalCode}</p>}
                     </div>
                   </div>
 

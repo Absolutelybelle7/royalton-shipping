@@ -8,7 +8,7 @@ export function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Introduction</h2>
             <p className="text-gray-600">
-              At TrackXpress, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services.
+              At Royalton Gold Security and Shipping, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services.
             </p>
           </section>
 
@@ -18,8 +18,8 @@ export function PrivacyPage() {
             <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
               <li>Name, email address, and contact information</li>
               <li>Shipping and billing addresses</li>
-              <li>Payment information</li>
-              <li>Shipment details and tracking information</li>
+              {/* <li>Payment information</li> */}
+              {/* <li>Shipment details and tracking information</li> */}
               <li>Account credentials and preferences</li>
             </ul>
           </section>
@@ -58,7 +58,7 @@ export function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">Contact Us</h2>
             <p className="text-gray-600">
-              If you have any questions about this Privacy Policy, please contact us at privacy@trackxpress.com
+              If you have any questions about this Privacy Policy, please contact us at privacy@royalton.com
             </p>
           </section>
 

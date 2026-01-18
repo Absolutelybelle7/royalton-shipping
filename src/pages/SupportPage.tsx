@@ -54,7 +54,7 @@ export function SupportPage() {
             <h3 className="text-xl font-bold text-gray-900 mb-2">Call Us</h3>
             <p className="text-gray-600 mb-4">24/7 phone support</p>
             <a href="tel:+1-800-TRACKXPRESS" className="text-orange-500 font-semibold">
-              +1-800-TRACKXPRESS
+              +1-800-ROYALTON GOLD SECURITY AND SHIPPING
             </a>
           </div>
 
@@ -64,8 +64,8 @@ export function SupportPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Email Us</h3>
             <p className="text-gray-600 mb-4">Response within 24 hours</p>
-            <a href="mailto:support@trackxpress.com" className="text-orange-500 font-semibold">
-              support@trackxpress.com
+            <a href="mailto:support@royalton.com" className="text-orange-500 font-semibold">
+              support@royalton.com
             </a>
           </div>
 

@@ -1,6 +1,6 @@
-# TrackXpress - Shipping Management Platform
+# Royalton Gold Security and Shipping - Shipping Management Platform
 
-A professional, full-stack shipping and logistics management platform built with modern web technologies. TrackXpress enables users to create, track, and manage shipments with real-time updates, professional dashboards, and comprehensive admin controls.
+A professional, full-stack shipping and logistics management platform built with modern web technologies.Royalton Gold Security and Shipping enables users to create, track, and manage shipments with real-time updates, professional dashboards, and comprehensive admin controls.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
