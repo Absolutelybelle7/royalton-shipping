@@ -72,19 +72,6 @@ export function ShipmentsPage() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return '✓';
-      case 'in_transit':
-      case 'out_for_delivery':
-        return '⏱';
-      case 'cancelled':
-        return '✕';
-      default:
-        return '⊙';
-    }
-  };
 
   if (loading) {
     return (
