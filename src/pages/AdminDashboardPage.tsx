@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where } from 'firebase/firestore';
+import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where, addDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../components/Router';
-import { Package, Search, Edit2, Trash2, CheckCircle, Download, BarChart3, Users } from 'lucide-react';
+import { Package, Search, Edit2, Trash2, CheckCircle, Download, BarChart3,  Plus, X } from 'lucide-react';
 import { showToast } from '../components/Toast';
+
+interface TrackingEvent {
+  id: string;
+  shipmentId: string;
+  status: string;
+  location: string | null;
+  description: string;
+  timestamp: string;
+}
 
 interface Shipment {
   id: string;
@@ -50,6 +59,7 @@ export function AdminDashboardPage() {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'overview' | 'shipments' | 'payments'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +68,8 @@ export function AdminDashboardPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Shipment>>({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [isAddingEvent, setIsAddingEvent] = useState(false);
+  const [newEvent, setNewEvent] = useState({ status: '', location: '', description: '', timestamp: new Date().toISOString().split('T')[0] });
 
   useEffect(() => {
     if (authLoading) return;
@@ -107,6 +119,65 @@ export function AdminDashboardPage() {
     }
   };
 
+  const fetchTrackingEvents = async (shipmentId: string) => {
+    try {
+      const q = query(
+        collection(db, 'tracking_events'),
+        where('shipmentId', '==', shipmentId),
+        orderBy('timestamp', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      const eventsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as TrackingEvent[];
+      setTrackingEvents(eventsData);
+    } catch (error) {
+      console.error('Error fetching tracking events:', error);
+      setTrackingEvents([]);
+    }
+  };
+
+  const handleAddTrackingEvent = async () => {
+    if (!selectedShipment || !newEvent.status || !newEvent.description) {
+      showToast('Please fill in status and description', 'error');
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, 'tracking_events'), {
+        shipmentId: selectedShipment.id,
+        status: newEvent.status,
+        location: newEvent.location || null,
+        description: newEvent.description,
+        timestamp: newEvent.timestamp,
+      });
+
+      await fetchTrackingEvents(selectedShipment.id);
+      setNewEvent({ status: '', location: '', description: '', timestamp: new Date().toISOString().split('T')[0] });
+      setIsAddingEvent(false);
+      showToast('Tracking event added successfully!', 'success');
+    } catch (error) {
+      console.error('Error adding tracking event:', error);
+      showToast('Failed to add tracking event', 'error');
+    }
+  };
+
+  const handleDeleteTrackingEvent = async (eventId: string) => {
+    if (!confirm('Delete this tracking event?')) return;
+
+    try {
+      await deleteDoc(doc(db, 'tracking_events', eventId));
+      if (selectedShipment) {
+        await fetchTrackingEvents(selectedShipment.id);
+      }
+      showToast('Tracking event deleted successfully!', 'success');
+    } catch (error) {
+      console.error('Error deleting tracking event:', error);
+      showToast('Failed to delete tracking event', 'error');
+    }
+  };
+
   const handleUpdateShipment = async () => {
     if (!selectedShipment) return;
 
@@ -149,6 +220,7 @@ export function AdminDashboardPage() {
       estimatedDelivery: shipment.estimatedDelivery,
       actualDelivery: shipment.actualDelivery,
     });
+    fetchTrackingEvents(shipment.id);
     setIsEditing(true);
   };
 
@@ -571,59 +643,172 @@ export function AdminDashboardPage() {
         {/* Edit Modal */}
         {isEditing && selectedShipment && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="relative top-10 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Shipment</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Tracking Number</label>
-                    <input
-                      type="text"
-                      value={editForm.trackingNumber || ''}
-                      onChange={(e) => setEditForm({ ...editForm, trackingNumber: e.target.value })}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                      placeholder="Enter tracking number"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Status</label>
-                    <select
-                      value={editForm.status || ''}
-                      onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="in-transit">In Transit</option>
-                      <option value="out-for-delivery">Out for Delivery</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Estimated Delivery</label>
-                    <input
-                      type="date"
-                      value={editForm.estimatedDelivery || ''}
-                      onChange={(e) => setEditForm({ ...editForm, estimatedDelivery: e.target.value })}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Actual Delivery</label>
-                    <input
-                      type="date"
-                      value={editForm.actualDelivery || ''}
-                      onChange={(e) => setEditForm({ ...editForm, actualDelivery: e.target.value })}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                    />
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Shipment & Tracking History</h3>
+                
+                {/* Shipment Details */}
+                <div className="mb-6 pb-6 border-b border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4">Shipment Details</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Tracking Number</label>
+                      <input
+                        type="text"
+                        value={editForm.trackingNumber || ''}
+                        onChange={(e) => setEditForm({ ...editForm, trackingNumber: e.target.value })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        placeholder="Enter tracking number"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Status</label>
+                      <select
+                        value={editForm.status || ''}
+                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="in-transit">In Transit</option>
+                        <option value="out-for-delivery">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Estimated Delivery</label>
+                      <input
+                        type="date"
+                        value={editForm.estimatedDelivery || ''}
+                        onChange={(e) => setEditForm({ ...editForm, estimatedDelivery: e.target.value })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Actual Delivery</label>
+                      <input
+                        type="date"
+                        value={editForm.actualDelivery || ''}
+                        onChange={(e) => setEditForm({ ...editForm, actualDelivery: e.target.value })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
                   </div>
                 </div>
+
+                {/* Tracking History */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-semibold text-gray-700">Tracking History</h4>
+                    <button
+                      onClick={() => setIsAddingEvent(!isAddingEvent)}
+                      className="flex items-center text-orange-600 hover:text-orange-700 text-sm font-medium"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Event
+                    </button>
+                  </div>
+
+                  {/* Add Tracking Event Form */}
+                  {isAddingEvent && (
+                    <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-md space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Status</label>
+                        <input
+                          type="text"
+                          value={newEvent.status}
+                          onChange={(e) => setNewEvent({ ...newEvent, status: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="e.g., picked_up, in_transit"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Location</label>
+                        <input
+                          type="text"
+                          value={newEvent.location}
+                          onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="e.g., New York, NY"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Description</label>
+                        <input
+                          type="text"
+                          value={newEvent.description}
+                          onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="e.g., Package picked up from sender"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Date</label>
+                        <input
+                          type="date"
+                          value={newEvent.timestamp}
+                          onChange={(e) => setNewEvent({ ...newEvent, timestamp: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+                      <div className="flex space-x-2 pt-2">
+                        <button
+                          onClick={handleAddTrackingEvent}
+                          className="flex-1 px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600"
+                        >
+                          Add Event
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsAddingEvent(false);
+                            setNewEvent({ status: '', location: '', description: '', timestamp: new Date().toISOString().split('T')[0] });
+                          }}
+                          className="flex-1 px-3 py-1 text-sm bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tracking Events List */}
+                  {trackingEvents.length > 0 ? (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {trackingEvents.map((event) => (
+                        <div key={event.id} className="p-3 bg-gray-50 border border-gray-200 rounded-md flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-gray-900 text-sm">{event.status}</span>
+                              <span className="text-xs text-gray-500">{event.timestamp}</span>
+                            </div>
+                            {event.location && (
+                              <div className="text-xs text-gray-600 mb-1">📍 {event.location}</div>
+                            )}
+                            <div className="text-sm text-gray-700">{event.description}</div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteTrackingEvent(event.id)}
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">No tracking events yet</p>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
                 <div className="mt-6 flex justify-end space-x-3">
                   <button
                     onClick={() => {
                       setIsEditing(false);
                       setSelectedShipment(null);
                       setEditForm({});
+                      setTrackingEvents([]);
+                      setIsAddingEvent(false);
                     }}
                     className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                   >
@@ -633,7 +818,7 @@ export function AdminDashboardPage() {
                     onClick={handleUpdateShipment}
                     className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
                   >
-                    Update
+                    Update Shipment
                   </button>
                 </div>
               </div>
