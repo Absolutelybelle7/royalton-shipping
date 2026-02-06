@@ -144,6 +144,7 @@ export function AdminDashboardPage() {
   const handleEdit = (shipment: Shipment) => {
     setSelectedShipment(shipment);
     setEditForm({
+      trackingNumber: shipment.trackingNumber,
       status: shipment.status,
       estimatedDelivery: shipment.estimatedDelivery,
       actualDelivery: shipment.actualDelivery,
@@ -574,6 +575,16 @@ export function AdminDashboardPage() {
               <div className="mt-3">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Shipment</h3>
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Tracking Number</label>
+                    <input
+                      type="text"
+                      value={editForm.trackingNumber || ''}
+                      onChange={(e) => setEditForm({ ...editForm, trackingNumber: e.target.value })}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                      placeholder="Enter tracking number"
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Status</label>
                     <select

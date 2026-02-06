@@ -8,11 +8,7 @@ interface ProtectedRouteProps {
   requireAdmin?: boolean;
 }
 
-/**
- * ProtectedRoute component handles authentication and authorization
- * - requireAuth: User must be logged in
- * - requireAdmin: User must be logged in AND have admin role
- */
+
 export function ProtectedRoute({
   children,
   requireAuth = false,
