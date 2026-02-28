@@ -3,8 +3,9 @@ import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where, 
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../components/Router';
-import { Package, Search, Edit2, Trash2, CheckCircle, Download, BarChart3, Plus, X } from 'lucide-react';
+import { Package, Search, Edit2, Trash2, CheckCircle, Download, BarChart3, Plus } from 'lucide-react';
 import { showToast } from '../components/Toast';
+import { TrackingHistoryTimeline } from '../components/TrackingHistoryTimeline';
 
 interface TrackingEvent {
   id: string;
@@ -817,96 +818,75 @@ export function AdminDashboardPage() {
                     </div>
                   )}
 
-                  {/* Tracking Events List */}
-                  {trackingEvents.length > 0 ? (
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {trackingEvents.map((event) => (
-                        <div key={event.id} className="p-3 bg-gray-50 border border-gray-200 rounded-md flex justify-between items-start">
-                          {editingEventId === event.id ? (
-                            <div className="flex-1 space-y-2">
-                              <div>
-                                <input
-                                  type="text"
-                                  value={editingEventData.status || ''}
-                                  onChange={(e) => setEditingEventData({ ...editingEventData, status: e.target.value })}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                />
-                              </div>
-                              <div>
-                                <input
-                                  type="datetime-local"
-                                  value={editingEventData.timestamp || ''}
-                                  onChange={(e) => setEditingEventData({ ...editingEventData, timestamp: e.target.value })}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                />
-                              </div>
-                              <div>
-                                <input
-                                  type="text"
-                                  value={editingEventData.location || ''}
-                                  onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                  placeholder="Location"
-                                />
-                              </div>
-                              <div>
-                                <input
-                                  type="text"
-                                  value={editingEventData.description || ''}
-                                  onChange={(e) => setEditingEventData({ ...editingEventData, description: e.target.value })}
-                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
-                                  placeholder="Description"
-                                />
-                              </div>
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={handleUpdateTrackingEvent}
-                                  className="px-2 py-1 text-xs bg-orange-500 text-white rounded hover:bg-orange-600"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  onClick={() => setEditingEventId(null)}
-                                  className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-semibold text-gray-900 text-sm">{event.status}</span>
-                                  <span className="text-xs text-gray-500">{new Date(event.timestamp).toLocaleString()}</span>
-                                </div>
-                                {event.location && (
-                                  <div className="text-xs text-gray-600 mb-1">📍 {event.location}</div>
-                                )}
-                                <div className="text-sm text-gray-700">{event.description}</div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleStartEditEvent(event)}
-                                  className="text-blue-500 hover:text-blue-700 text-xs"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTrackingEvent(event.id)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
+                  {/* Edit Tracking Event Form (when editing an existing event) */}
+                  {editingEventId && (
+                    <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-md space-y-3">
+                      <h5 className="text-xs font-semibold text-gray-700">Edit event</h5>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Status</label>
+                        <input
+                          type="text"
+                          value={editingEventData.status || ''}
+                          onChange={(e) => setEditingEventData({ ...editingEventData, status: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Date & time</label>
+                        <input
+                          type="datetime-local"
+                          value={editingEventData.timestamp ? editingEventData.timestamp.slice(0, 16) : ''}
+                          onChange={(e) => setEditingEventData({ ...editingEventData, timestamp: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Location</label>
+                        <input
+                          type="text"
+                          value={editingEventData.location || ''}
+                          onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Location"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700">Description</label>
+                        <input
+                          type="text"
+                          value={editingEventData.description || ''}
+                          onChange={(e) => setEditingEventData({ ...editingEventData, description: e.target.value })}
+                          className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Description"
+                        />
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleUpdateTrackingEvent}
+                          className="px-2 py-1 text-xs bg-orange-500 text-white rounded hover:bg-orange-600"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => { setEditingEventId(null); setEditingEventData({}); }}
+                          className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-500 italic">No tracking events yet</p>
                   )}
+
+                  {/* Tracking progress timeline (same as user view: brown = current step, grey = pending) */}
+                  <div className="max-h-80 overflow-y-auto">
+                    <TrackingHistoryTimeline
+                      events={trackingEvents}
+                      showHeading={false}
+                      compact
+                      onEdit={handleStartEditEvent}
+                      onDelete={handleDeleteTrackingEvent}
+                    />
+                  </div>
                 </div>
 
                 {/* Action Buttons */}

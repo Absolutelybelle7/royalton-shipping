@@ -4,6 +4,7 @@ import { getDocs, collection, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Shipment, TrackingEvent } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { TrackingHistoryTimeline } from '../components/TrackingHistoryTimeline';
 
 export function TrackPage() {
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -263,56 +264,7 @@ export function TrackPage() {
               )}
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <Clock className="h-6 w-6 mr-2 text-orange-500" />
-                Tracking History
-              </h2>
-
-              {trackingEvents.length > 0 ? (
-                <div className="space-y-6">
-                  {trackingEvents.map((event, index) => (
-                    <div key={event.id} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            index === 0 ? 'bg-orange-500' : 'bg-gray-300'
-                          }`}
-                        >
-                          {index === 0 ? (
-                            <CheckCircle className="h-5 w-5 text-white" />
-                          ) : (
-                            <div className="w-3 h-3 bg-white rounded-full"></div>
-                          )}
-                        </div>
-                        {index < trackingEvents.length - 1 && (
-                          <div className="w-0.5 h-full bg-gray-300 mt-2"></div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 pb-6">
-                        <div className="flex items-start justify-between mb-1">
-                          <h3 className="font-semibold text-gray-900 capitalize">
-                            {event.status.replace('_', ' ')}
-                          </h3>
-                          <span className="text-sm text-gray-500">
-                            {new Date(event.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                        {event.location && (
-                          <p className="text-sm text-gray-600 mb-1">{event.location}</p>
-                        )}
-                        <p className="text-gray-600">{event.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-600 text-center py-8">
-                  No tracking events available yet.
-                </p>
-              )}
-            </div>
+            <TrackingHistoryTimeline events={trackingEvents} showHeading />
           </>
         )}
       </div>
