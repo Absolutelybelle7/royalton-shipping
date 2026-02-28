@@ -42,7 +42,7 @@ A professional, full-stack shipping and logistics management platform built with
 - ✅ All user permissions
 - **Admin Dashboard** - Comprehensive view of all shipments and payments
 - **Shipment Management** - Create, update, and delete shipments
-- **Status Updates** - Update shipment status and tracking events
+- **Status & Time Management** - Update shipment status, delivery times (pickup, estimated, actual) and modify tracking event timestamps directly from the admin dashboard
 - **Payment Management** - Track and manage all payment transactions
 - **Analytics** - View platform statistics and metrics
 

@@ -3,7 +3,7 @@ import { collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where, 
 import { db } from '../lib/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { navigate } from '../components/Router';
-import { Package, Search, Edit2, Trash2, CheckCircle, Download, BarChart3,  Plus, X } from 'lucide-react';
+import { Package, Search, Edit2, Trash2, CheckCircle, Download, BarChart3, Plus, X } from 'lucide-react';
 import { showToast } from '../components/Toast';
 
 interface TrackingEvent {
@@ -69,7 +69,10 @@ export function AdminDashboardPage() {
   const [editForm, setEditForm] = useState<Partial<Shipment>>({});
   const [successMessage, setSuccessMessage] = useState('');
   const [isAddingEvent, setIsAddingEvent] = useState(false);
-  const [newEvent, setNewEvent] = useState({ status: '', location: '', description: '', timestamp: new Date().toISOString().split('T')[0] });
+  const [newEvent, setNewEvent] = useState({ status: '', location: '', description: '', timestamp: new Date().toISOString().slice(0,16) });
+  // fields for editing existing tracking events
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [editingEventData, setEditingEventData] = useState<Partial<TrackingEvent>>({});
 
   useEffect(() => {
     if (authLoading) return;
@@ -178,6 +181,39 @@ export function AdminDashboardPage() {
     }
   };
 
+  // start editing an existing tracking event
+  const handleStartEditEvent = (event: TrackingEvent) => {
+    setEditingEventId(event.id);
+    setEditingEventData({
+      status: event.status,
+      location: event.location || '',
+      description: event.description,
+      timestamp: event.timestamp,
+    });
+  };
+
+  const handleUpdateTrackingEvent = async () => {
+    if (!editingEventId) return;
+    try {
+      const eventRef = doc(db, 'tracking_events', editingEventId);
+      await updateDoc(eventRef, {
+        status: editingEventData.status,
+        location: editingEventData.location || null,
+        description: editingEventData.description,
+        timestamp: editingEventData.timestamp,
+      });
+      if (selectedShipment) {
+        await fetchTrackingEvents(selectedShipment.id);
+      }
+      setEditingEventId(null);
+      setEditingEventData({});
+      showToast('Tracking event updated successfully!', 'success');
+    } catch (error) {
+      console.error('Error updating tracking event:', error);
+      showToast('Failed to update tracking event', 'error');
+    }
+  };
+
   const handleUpdateShipment = async () => {
     if (!selectedShipment) return;
 
@@ -217,6 +253,7 @@ export function AdminDashboardPage() {
     setEditForm({
       trackingNumber: shipment.trackingNumber,
       status: shipment.status,
+      pickupDate: shipment.pickupDate,
       estimatedDelivery: shipment.estimatedDelivery,
       actualDelivery: shipment.actualDelivery,
     });
@@ -676,6 +713,15 @@ export function AdminDashboardPage() {
                       </select>
                     </div>
                     <div>
+                      <label className="block text-sm font-medium text-gray-700">Pickup Date</label>
+                      <input
+                        type="date"
+                        value={editForm.pickupDate || ''}
+                        onChange={(e) => setEditForm({ ...editForm, pickupDate: e.target.value })}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700">Estimated Delivery</label>
                       <input
                         type="date"
@@ -743,9 +789,9 @@ export function AdminDashboardPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700">Date</label>
+                        <label className="block text-xs font-medium text-gray-700">Date & time</label>
                         <input
-                          type="date"
+                          type="datetime-local"
                           value={newEvent.timestamp}
                           onChange={(e) => setNewEvent({ ...newEvent, timestamp: e.target.value })}
                           className="mt-1 block w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
@@ -776,22 +822,85 @@ export function AdminDashboardPage() {
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {trackingEvents.map((event) => (
                         <div key={event.id} className="p-3 bg-gray-50 border border-gray-200 rounded-md flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-gray-900 text-sm">{event.status}</span>
-                              <span className="text-xs text-gray-500">{event.timestamp}</span>
+                          {editingEventId === event.id ? (
+                            <div className="flex-1 space-y-2">
+                              <div>
+                                <input
+                                  type="text"
+                                  value={editingEventData.status || ''}
+                                  onChange={(e) => setEditingEventData({ ...editingEventData, status: e.target.value })}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="datetime-local"
+                                  value={editingEventData.timestamp || ''}
+                                  onChange={(e) => setEditingEventData({ ...editingEventData, timestamp: e.target.value })}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="text"
+                                  value={editingEventData.location || ''}
+                                  onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                                  placeholder="Location"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="text"
+                                  value={editingEventData.description || ''}
+                                  onChange={(e) => setEditingEventData({ ...editingEventData, description: e.target.value })}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                                  placeholder="Description"
+                                />
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={handleUpdateTrackingEvent}
+                                  className="px-2 py-1 text-xs bg-orange-500 text-white rounded hover:bg-orange-600"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingEventId(null)}
+                                  className="px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
-                            {event.location && (
-                              <div className="text-xs text-gray-600 mb-1">📍 {event.location}</div>
-                            )}
-                            <div className="text-sm text-gray-700">{event.description}</div>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteTrackingEvent(event.id)}
-                            className="ml-2 text-red-500 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
+                          ) : (
+                            <>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-semibold text-gray-900 text-sm">{event.status}</span>
+                                  <span className="text-xs text-gray-500">{new Date(event.timestamp).toLocaleString()}</span>
+                                </div>
+                                {event.location && (
+                                  <div className="text-xs text-gray-600 mb-1">📍 {event.location}</div>
+                                )}
+                                <div className="text-sm text-gray-700">{event.description}</div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleStartEditEvent(event)}
+                                  className="text-blue-500 hover:text-blue-700 text-xs"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTrackingEvent(event.id)}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>

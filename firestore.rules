@@ -48,9 +48,9 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.userId) || isAdmin();
     }
 
-    // Tracking events – public read
+    // Tracking events – public read, admin write
     match /tracking_events/{eventId} {
-      allow create: if isAdmin();
+      allow create, update, delete: if isAdmin();
       allow read: if true;
     }
 
